@@ -20,11 +20,12 @@ function M.start()
   end
   
   -- Create buffer for REPL
-  state.buf_id = api.nvim_create_buf(false, true)
-  if not api.nvim_buf_is_valid(state.buf_id) then
-    vim.notify("Failed to create buffer", vim.log.levels.ERROR)
+  local ok, buf_id = pcall(api.nvim_create_buf, false, true)
+  if not ok or not buf_id or buf_id == 0 then
+    vim.notify("Failed to create buffer: " .. tostring(buf_id), vim.log.levels.ERROR)
     return
   end
+  state.buf_id = buf_id
   
   -- Open window
   if state.config.window.floating then
@@ -34,8 +35,21 @@ function M.start()
   end
   
   -- Set buffer options after window is created
-  vim.bo[state.buf_id].buftype = "terminal"
-  vim.bo[state.buf_id].buflisted = false
+  if api.nvim_buf_is_valid(state.buf_id) then
+    local ok, err = pcall(function()
+      vim.bo[state.buf_id].buftype = "terminal"
+      vim.bo[state.buf_id].buflisted = false
+    end)
+    if not ok then
+      vim.notify("Failed to set buffer options: " .. tostring(err), vim.log.levels.ERROR)
+      M.stop()
+      return
+    end
+  else
+    vim.notify("Buffer is not valid", vim.log.levels.ERROR)
+    M.stop()
+    return
+  end
   
   -- Start REPL process
   local utils = require("resonance.utils")
