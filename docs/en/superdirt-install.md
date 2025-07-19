@@ -1,92 +1,92 @@
 # SuperDirt Installation Guide
 
-SuperDirtはTidalCyclesの音を出力するためのSuperCollider拡張です。
+SuperDirt is a SuperCollider extension for audio output in TidalCycles.
 
-## 前提条件
-- SuperColliderがインストールされていること
-- macOSの場合：[SuperCollider.app](https://supercollider.github.io/download)をダウンロード
+## Prerequisites
+- SuperCollider must be installed
+- For macOS: Download [SuperCollider.app](https://supercollider.github.io/download)
 
-## インストール方法
+## Installation Methods
 
-### 方法1: SuperCollider内でインストール（推奨）
+### Method 1: Install from SuperCollider (Recommended)
 
-1. SuperColliderを起動
-2. 以下のコードを実行（Cmd+Enterで実行）:
+1. Launch SuperCollider
+2. Execute the following code (Cmd+Enter to execute):
 
 ```supercollider
-// Quarksをインストール（パッケージマネージャー）
+// Install Quarks (package manager)
 Quarks.checkForUpdates({Quarks.install("SuperDirt", "v1.7.3"); thisProcess.recompile()})
 ```
 
-3. SuperColliderが再起動したら、インストール完了
+3. Installation is complete when SuperCollider restarts
 
-### 方法2: 手動インストール
+### Method 2: Manual Installation
 
-1. SuperColliderで以下を実行:
+1. Execute in SuperCollider:
 ```supercollider
-// Quarks GUIを開く
+// Open Quarks GUI
 Quarks.gui
 ```
 
-2. リストから"SuperDirt"を探して、インストールボタンをクリック
+2. Find "SuperDirt" in the list and click the install button
 
-### 方法3: Gitから直接インストール
+### Method 3: Direct Installation from Git
 
 ```supercollider
 Quarks.install("https://github.com/musikinformatik/SuperDirt.git");
 ```
 
-## インストール確認
+## Verify Installation
 
-SuperColliderで以下を実行：
+Execute in SuperCollider:
 
 ```supercollider
-// SuperDirtを起動
+// Start SuperDirt
 SuperDirt.start
 ```
 
-成功すると以下のようなメッセージが表示されます：
+If successful, you'll see a message like:
 ```
 SuperDirt: listening on port 57120
 ```
 
-## トラブルシューティング
+## Troubleshooting
 
-### エラー: "Class not found: SuperDirt"
-- SuperColliderを再起動
-- `Language > Recompile Class Library`を実行
+### Error: "Class not found: SuperDirt"
+- Restart SuperCollider
+- Execute `Language > Recompile Class Library`
 
-### エラー: "Could not bind to requested port"
-- 別のプロセスがポート57120を使用している
-- SuperColliderを再起動するか、別のポートを指定：
+### Error: "Could not bind to requested port"
+- Another process is using port 57120
+- Restart SuperCollider or specify a different port:
 ```supercollider
 ~dirt = SuperDirt(2, s);
-~dirt.start(57121); // 別のポート
+~dirt.start(57121); // Different port
 ```
 
-### サンプルが見つからない
-デフォルトサンプルをダウンロード：
+### Samples Not Found
+Download default samples:
 ```bash
 cd ~/Library/Application\ Support/SuperCollider/downloaded-quarks/Dirt-Samples/
 git clone https://github.com/musikinformatik/Dirt-Samples.git .
 ```
 
-## 使い方
+## Usage
 
-1. SuperColliderでSuperDirtを起動：
+1. Start SuperDirt in SuperCollider:
 ```supercollider
 SuperDirt.start
 ```
 
-2. TidalCyclesを起動（別ウィンドウ）
-3. 音が鳴るはずです！
+2. Start TidalCycles (in a separate window)
+3. You should hear sound!
 
-## 便利な設定
+## Useful Configuration
 
-SuperColliderの起動時に自動でSuperDirtを開始：
+To automatically start SuperDirt when SuperCollider launches:
 
-1. `File > Open startup file`を選択
-2. 以下を追加：
+1. Select `File > Open startup file`
+2. Add the following:
 
 ```supercollider
 s.waitForBoot {

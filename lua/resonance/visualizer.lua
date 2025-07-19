@@ -78,18 +78,34 @@ function M.update_pattern(pattern_string)
   -- Parse pattern string and extract rhythm info
   local drums = {}
   
-  -- Simple pattern matching for common drum patterns
-  if pattern_string:match("bd") or pattern_string:match("kick") then
-    table.insert(drums, { type = "kick", pattern = "x...x..." })
-  end
-  if pattern_string:match("sn") or pattern_string:match("snare") then
-    table.insert(drums, { type = "snare", pattern = "..x...x." })
-  end
-  if pattern_string:match("hh") or pattern_string:match("hat") then
-    table.insert(drums, { type = "hihat", pattern = "xxxxxxxx" })
+  -- Protect against nil or invalid input
+  if not pattern_string or type(pattern_string) ~= "string" then
+    return
   end
   
-  state.patterns = drums
+  -- Simple pattern matching for common drum patterns
+  if pattern_string:match("bd") or pattern_string:match("kick") or pattern_string:match("808bd") then
+    table.insert(drums, { type = "kick", pattern = "x...x..." })
+  end
+  if pattern_string:match("sn") or pattern_string:match("snare") or pattern_string:match("808sd") then
+    table.insert(drums, { type = "snare", pattern = "..x...x." })
+  end
+  if pattern_string:match("hh") or pattern_string:match("hat") or pattern_string:match("808oh") then
+    table.insert(drums, { type = "hihat", pattern = "xxxxxxxx" })
+  end
+  if pattern_string:match("cp") or pattern_string:match("clap") then
+    table.insert(drums, { type = "default", pattern = "....x..." })
+  end
+  
+  -- Handle melodic patterns differently
+  if pattern_string:match("arpy") or pattern_string:match("up") then
+    table.insert(drums, { type = "default", pattern = "x.x.x.x." })
+  end
+  
+  -- Only update if we found patterns
+  if #drums > 0 then
+    state.patterns = drums
+  end
 end
 
 function M.start_animation()
@@ -135,10 +151,11 @@ function M.render_frame()
   -- Pattern visualization
   for _, drum in ipairs(state.patterns) do
     local visual = visuals[drum.type] or visuals.default
-    local pattern = drum.pattern
+    local pattern = drum.pattern or "........"
     
-    -- Check if this beat should trigger
-    local trigger = pattern:sub(beat, beat) == "x"
+    -- Protect against pattern length issues
+    local beat_char = beat <= #pattern and pattern:sub(beat, beat) or "."
+    local trigger = beat_char == "x"
     
     -- Add drum lines with animation
     for i, line in ipairs(visual) do
@@ -149,7 +166,7 @@ function M.render_frame()
           display = display:gsub(".", "█")
         end
       end
-      table.insert(lines, " " .. display .. " " .. drum.type)
+      table.insert(lines, " " .. display .. " " .. (drum.type == "default" and "melody" or drum.type))
     end
     table.insert(lines, "")
   end
@@ -161,8 +178,12 @@ function M.render_frame()
     table.insert(lines, "  Evaluate some code with <C-e>")
   end
   
-  -- Update buffer
-  api.nvim_buf_set_lines(state.buf_id, 0, -1, false, lines)
+  -- Update buffer safely
+  vim.schedule(function()
+    if api.nvim_buf_is_valid(state.buf_id) then
+      api.nvim_buf_set_lines(state.buf_id, 0, -1, false, lines)
+    end
+  end)
 end
 
 -- Integration with REPL evaluation
