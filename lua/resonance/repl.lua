@@ -38,10 +38,14 @@ function M.start()
   vim.bo[state.buf_id].buflisted = false
   
   -- Start REPL process
-  local cmd = { state.config.cmd }
-  vim.list_extend(cmd, state.config.args or {})
+  local utils = require("resonance.utils")
+  local cmd_parts = utils.build_repl_command(state.config)
+  if not cmd_parts then
+    M.stop()
+    return
+  end
   
-  state.job_id = fn.termopen(table.concat(cmd, " "), {
+  state.job_id = fn.termopen(table.concat(cmd_parts, " "), {
     on_exit = function()
       M.stop()
     end,

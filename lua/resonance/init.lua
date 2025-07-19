@@ -2,8 +2,9 @@ local M = {}
 
 M.config = {
   repl = {
-    cmd = "ghci",
-    args = { "-ghci-script", vim.fn.stdpath("data") .. "/resonance/BootTidal.hs" },
+    cmd = nil, -- Auto-detect by default (stack ghci or ghci)
+    args = {}, -- Additional arguments
+    extra_args = {}, -- Extra arguments after boot script
     auto_start = false,
     window = {
       position = "bottom",

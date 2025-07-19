@@ -16,6 +16,7 @@ A modern Neovim plugin for TidalCycles live coding.
 
 - Neovim >= 0.8.0
 - TidalCycles installed
+- GHCi (via GHC or Stack)
 - SuperCollider (for audio)
 
 ## Installation
@@ -55,8 +56,16 @@ Default keymaps:
 require("resonance").setup({
   -- REPL settings
   repl = {
-    cmd = "ghci",
-    args = { "-ghci-script", vim.fn.stdpath("data") .. "/resonance/BootTidal.hs" },
+    -- Auto-detects: stack ghci > ghci
+    -- Or specify manually:
+    -- cmd = "stack",
+    -- args = { "exec", "--", "ghci" },
+    
+    -- For custom installations:
+    -- cmd = "/path/to/ghci",
+    -- args = {},
+    
+    extra_args = {}, -- Additional args after boot script
     auto_start = false,
   },
   
