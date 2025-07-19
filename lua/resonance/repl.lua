@@ -36,14 +36,17 @@ function M.start()
   
   -- Set buffer options after window is created
   if api.nvim_buf_is_valid(state.buf_id) then
-    local ok, err = pcall(function()
-      vim.bo[state.buf_id].buftype = "terminal"
-      vim.bo[state.buf_id].buflisted = false
-    end)
-    if not ok then
-      vim.notify("Failed to set buffer options: " .. tostring(err), vim.log.levels.ERROR)
-      M.stop()
-      return
+    -- Set current buffer to our buffer temporarily
+    local current_buf = api.nvim_get_current_buf()
+    api.nvim_set_current_buf(state.buf_id)
+    
+    -- Set options using vim.opt_local
+    vim.opt_local.buftype = "terminal"
+    vim.opt_local.buflisted = false
+    
+    -- Restore previous buffer if needed
+    if current_buf ~= state.buf_id and api.nvim_buf_is_valid(current_buf) then
+      -- We're already in the terminal window, no need to switch back
     end
   else
     vim.notify("Buffer is not valid", vim.log.levels.ERROR)
