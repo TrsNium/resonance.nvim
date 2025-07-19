@@ -77,6 +77,9 @@ function M.build_repl_command(repl_config)
     vim.list_extend(cmd_parts, repl_config.extra_args)
   end
   
+  -- Debug: print the full command
+  vim.notify("Starting REPL with: " .. table.concat(cmd_parts, " "), vim.log.levels.INFO)
+  
   return cmd_parts
 end
 

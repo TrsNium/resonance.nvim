@@ -39,8 +39,21 @@ function M.start()
   
   -- termopen creates its own buffer and sets it as terminal
   state.job_id = fn.termopen(table.concat(cmd_parts, " "), {
-    on_exit = function()
+    on_exit = function(job_id, exit_code, event_type)
+      vim.notify(string.format("TidalCycles REPL exited (code: %d, type: %s)", exit_code, event_type), vim.log.levels.WARN)
       M.stop()
+    end,
+    on_stdout = function(job_id, data, event)
+      -- Log stdout for debugging
+    end,
+    on_stderr = function(job_id, data, event)
+      if data and #data > 0 then
+        for _, line in ipairs(data) do
+          if line ~= "" then
+            vim.notify("REPL Error: " .. line, vim.log.levels.ERROR)
+          end
+        end
+      end
     end,
   })
   
