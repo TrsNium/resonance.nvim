@@ -19,57 +19,45 @@ function M.start()
     return
   end
   
-  -- Create buffer for REPL
-  local ok, buf_id = pcall(api.nvim_create_buf, false, true)
-  if not ok or not buf_id or buf_id == 0 then
-    vim.notify("Failed to create buffer: " .. tostring(buf_id), vim.log.levels.ERROR)
-    return
-  end
-  state.buf_id = buf_id
+  -- Save current window
+  local prev_win = api.nvim_get_current_win()
   
-  -- Open window
+  -- Open window first
   if state.config.window.floating then
     M._open_floating_window()
   else
     M._open_split_window()
   end
   
-  -- Set buffer options after window is created
-  if api.nvim_buf_is_valid(state.buf_id) then
-    -- Set current buffer to our buffer temporarily
-    local current_buf = api.nvim_get_current_buf()
-    api.nvim_set_current_buf(state.buf_id)
-    
-    -- Set options using vim.opt_local
-    vim.opt_local.buftype = "terminal"
-    vim.opt_local.buflisted = false
-    
-    -- Restore previous buffer if needed
-    if current_buf ~= state.buf_id and api.nvim_buf_is_valid(current_buf) then
-      -- We're already in the terminal window, no need to switch back
-    end
-  else
-    vim.notify("Buffer is not valid", vim.log.levels.ERROR)
-    M.stop()
-    return
-  end
-  
-  -- Start REPL process
+  -- Now create terminal in the current window
   local utils = require("resonance.utils")
   local cmd_parts = utils.build_repl_command(state.config)
   if not cmd_parts then
-    M.stop()
+    api.nvim_win_close(0, true)
     return
   end
   
+  -- termopen creates its own buffer and sets it as terminal
   state.job_id = fn.termopen(table.concat(cmd_parts, " "), {
     on_exit = function()
       M.stop()
     end,
   })
   
+  if state.job_id == 0 or state.job_id == -1 then
+    vim.notify("Failed to start REPL process", vim.log.levels.ERROR)
+    api.nvim_win_close(0, true)
+    return
+  end
+  
+  -- Get the buffer that termopen created
+  state.buf_id = api.nvim_get_current_buf()
+  state.win_id = api.nvim_get_current_win()
+  
   -- Go back to previous window
-  vim.cmd("wincmd p")
+  if api.nvim_win_is_valid(prev_win) then
+    api.nvim_set_current_win(prev_win)
+  end
   
   vim.notify("TidalCycles REPL started", vim.log.levels.INFO)
 end
@@ -196,17 +184,14 @@ function M._open_split_window()
   local size = state.config.window.size
   
   if position == "bottom" then
-    vim.cmd("botright " .. size .. "split")
+    vim.cmd("botright " .. size .. "new")
   elseif position == "top" then
-    vim.cmd("topleft " .. size .. "split")
+    vim.cmd("topleft " .. size .. "new")
   elseif position == "left" then
-    vim.cmd("topleft " .. size .. "vsplit")
+    vim.cmd("topleft " .. size .. "vnew")
   elseif position == "right" then
-    vim.cmd("botright " .. size .. "vsplit")
+    vim.cmd("botright " .. size .. "vnew")
   end
-  
-  state.win_id = api.nvim_get_current_win()
-  api.nvim_win_set_buf(state.win_id, state.buf_id)
 end
 
 function M._open_floating_window()
@@ -215,7 +200,10 @@ function M._open_floating_window()
   local row = vim.o.lines - height - 3
   local col = math.floor((vim.o.columns - width) / 2)
   
-  state.win_id = api.nvim_open_win(state.buf_id, true, {
+  -- Create a new buffer for the floating window
+  local buf = api.nvim_create_buf(false, true)
+  
+  state.win_id = api.nvim_open_win(buf, true, {
     relative = "editor",
     width = width,
     height = height,
