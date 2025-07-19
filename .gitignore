@@ -1,0 +1,21 @@
+# Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Lua
+*.rock
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.sublime-*
+
+# Testing
+.test/
+test/sandbox/

@@ -1,0 +1,1 @@
+autocmd BufRead,BufNewFile *.tidal set filetype=tidal
