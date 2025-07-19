@@ -53,7 +53,7 @@ function M.get_ghci_command(user_config)
     return nil
   end
   
-  vim.notify("Using " .. detected.name .. " for TidalCycles", vim.log.levels.INFO)
+  -- vim.notify("Using " .. detected.name .. " for TidalCycles", vim.log.levels.INFO)
   return detected
 end
 
@@ -77,8 +77,8 @@ function M.build_repl_command(repl_config)
     vim.list_extend(cmd_parts, repl_config.extra_args)
   end
   
-  -- Debug: print the full command
-  vim.notify("Starting REPL with: " .. table.concat(cmd_parts, " "), vim.log.levels.INFO)
+  -- Debug: print the full command (commented out for production)
+  -- vim.notify("Starting REPL with: " .. table.concat(cmd_parts, " "), vim.log.levels.INFO)
   
   return cmd_parts
 end

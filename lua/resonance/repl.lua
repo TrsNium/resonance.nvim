@@ -37,8 +37,8 @@ function M.start()
     return
   end
   
-  -- Debug: print command parts
-  vim.notify("Command parts: " .. vim.inspect(cmd_parts), vim.log.levels.INFO)
+  -- Debug: print command parts (commented out for production)
+  -- vim.notify("Command parts: " .. vim.inspect(cmd_parts), vim.log.levels.INFO)
   
   -- termopen needs the command as a string or list
   -- For complex commands with many arguments, we need to be careful
@@ -52,12 +52,15 @@ function M.start()
   
   state.job_id = fn.termopen(term_cmd, {
     on_exit = function(job_id, exit_code, event_type)
-      vim.notify(string.format("TidalCycles REPL exited (code: %d, type: %s)", exit_code, event_type), vim.log.levels.WARN)
-      -- Check common exit codes
-      if exit_code == 127 then
-        vim.notify("Command not found. Check if GHCi is installed.", vim.log.levels.ERROR)
-      elseif exit_code == 1 then
-        vim.notify("GHCi exited with error. Check the boot script.", vim.log.levels.ERROR)
+      -- Only show exit message if it's an error
+      if exit_code ~= 0 then
+        vim.notify(string.format("TidalCycles REPL exited with code: %d", exit_code), vim.log.levels.WARN)
+        -- Check common exit codes
+        if exit_code == 127 then
+          vim.notify("Command not found. Check if GHCi is installed.", vim.log.levels.ERROR)
+        elseif exit_code == 1 then
+          vim.notify("GHCi exited with error. Check the boot script.", vim.log.levels.ERROR)
+        end
       end
       M.stop()
     end,
