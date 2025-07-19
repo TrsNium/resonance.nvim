@@ -37,24 +37,29 @@ function M.start()
     return
   end
   
-  -- termopen creates its own buffer and sets it as terminal
-  -- Pass command as array instead of string to handle arguments properly
-  state.job_id = fn.termopen(cmd_parts, {
+  -- Debug: print command parts
+  vim.notify("Command parts: " .. vim.inspect(cmd_parts), vim.log.levels.INFO)
+  
+  -- termopen needs the command as a string or list
+  -- For complex commands with many arguments, we need to be careful
+  local term_cmd
+  if #cmd_parts == 1 then
+    term_cmd = cmd_parts[1]
+  else
+    -- For shell commands, we need to properly escape
+    term_cmd = cmd_parts
+  end
+  
+  state.job_id = fn.termopen(term_cmd, {
     on_exit = function(job_id, exit_code, event_type)
       vim.notify(string.format("TidalCycles REPL exited (code: %d, type: %s)", exit_code, event_type), vim.log.levels.WARN)
-      M.stop()
-    end,
-    on_stdout = function(job_id, data, event)
-      -- Log stdout for debugging
-    end,
-    on_stderr = function(job_id, data, event)
-      if data and #data > 0 then
-        for _, line in ipairs(data) do
-          if line ~= "" then
-            vim.notify("REPL Error: " .. line, vim.log.levels.ERROR)
-          end
-        end
+      -- Check common exit codes
+      if exit_code == 127 then
+        vim.notify("Command not found. Check if GHCi is installed.", vim.log.levels.ERROR)
+      elseif exit_code == 1 then
+        vim.notify("GHCi exited with error. Check the boot script.", vim.log.levels.ERROR)
       end
+      M.stop()
     end,
   })
   

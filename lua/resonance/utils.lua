@@ -23,7 +23,7 @@ function M.find_ghci_command()
   end
   
   -- Global options
-  table.insert(commands, { cmd = "stack", args = { "exec", "--resolver", "lts", "--", "ghci", "--package", "tidal" }, name = "stack ghci (global)" })
+  table.insert(commands, { cmd = "stack", args = { "exec", "--resolver", "lts", "--", "ghci", "-package", "tidal" }, name = "stack ghci (global)" })
   table.insert(commands, { cmd = "ghci", args = {}, name = "ghci" })
   
   for _, config in ipairs(commands) do
