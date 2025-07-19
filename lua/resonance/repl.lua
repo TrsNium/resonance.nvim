@@ -21,8 +21,10 @@ function M.start()
   
   -- Create buffer for REPL
   state.buf_id = api.nvim_create_buf(false, true)
-  vim.bo[state.buf_id].buftype = "terminal"
-  vim.bo[state.buf_id].buflisted = false
+  if not api.nvim_buf_is_valid(state.buf_id) then
+    vim.notify("Failed to create buffer", vim.log.levels.ERROR)
+    return
+  end
   
   -- Open window
   if state.config.window.floating then
@@ -30,6 +32,10 @@ function M.start()
   else
     M._open_split_window()
   end
+  
+  -- Set buffer options after window is created
+  vim.bo[state.buf_id].buftype = "terminal"
+  vim.bo[state.buf_id].buflisted = false
   
   -- Start REPL process
   local cmd = { state.config.cmd }

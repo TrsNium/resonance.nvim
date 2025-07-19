@@ -1,21 +1,114 @@
+# Claude
+.claude/
+
 # Neovim
 *.swp
 *.swo
+*.swn
 *~
 .netrwhist
+tags
+.tags
 
 # Lua
 *.rock
+lua-language-server/
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
 # IDE
 .idea/
 .vscode/
 *.sublime-*
+.project
+.settings/
+.classpath
+*.iml
+.vim/
 
 # Testing
 .test/
 test/sandbox/
+coverage/
+*.log
+.coverage
+
+# Build artifacts
+build/
+dist/
+*.o
+*.so
+*.dylib
+*.dll
+
+# Package managers
+node_modules/
+vendor/
+.bundle/
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+.temp/
+.tmp/
+.cache/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*~
+
+# Git
+*.orig
+*.rej
+
+# Documentation build
+docs/_build/
+docs/.build/
+site/
+
+# Python (if any scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.env
+
+# Haskell/GHC (for TidalCycles)
+.stack-work/
+.cabal-sandbox/
+cabal.sandbox.config
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+.ghc.environment.*
+dist-newstyle/
+
+# TidalCycles specific
+.tidalsession/
+*.tidal.log
+SuperDirt/
+
+# Local development
+.local/
+.envrc
+.direnv/
+
+# Misc
+TODO.md
+NOTES.md
+scratch/
+tmp/
