@@ -161,6 +161,11 @@ end
 
 function M.hush()
   M.send("hush")
+  -- Clear all visualizer channels
+  local viz = require("resonance.visualizer")
+  if viz and viz.clear_all then
+    viz.clear_all()
+  end
 end
 
 function M.silence(n)

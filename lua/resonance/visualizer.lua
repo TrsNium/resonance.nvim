@@ -7,6 +7,9 @@ local state = {
   timer = nil,
   patterns = {},
   cycle_count = 0,
+  -- Track multiple channels
+  channels = {}, -- d1 through d12
+  active_channels = {},
 }
 
 -- ASCII art patterns for visualization
@@ -34,9 +37,9 @@ function M.open()
     vim.bo[state.buf_id].bufhidden = "hide"
   end
   
-  -- Calculate window size and position
-  local width = 40
-  local height = 10
+  -- Calculate window size and position (larger for multi-channel view)
+  local width = 55
+  local height = 20
   local row = 2
   local col = vim.o.columns - width - 2
   
@@ -129,7 +132,7 @@ function M.render_frame()
   end
   
   local lines = {}
-  local width = 40
+  local width = 50
   local beat = (state.cycle_count % 8) + 1
   
   -- Header
@@ -147,34 +150,67 @@ function M.render_frame()
     end
   end
   table.insert(lines, beat_line)
+  table.insert(lines, "")
   
-  -- Pattern visualization
-  for _, drum in ipairs(state.patterns) do
-    local visual = visuals[drum.type] or visuals.default
-    local pattern = drum.pattern or "........"
-    
-    -- Protect against pattern length issues
-    local beat_char = beat <= #pattern and pattern:sub(beat, beat) or "."
-    local trigger = beat_char == "x"
-    
-    -- Add drum lines with animation
-    for i, line in ipairs(visual) do
-      local display = line
-      if trigger then
-        -- Animate on trigger
-        if i == 2 then
-          display = display:gsub(".", "█")
+  -- Active channels visualization
+  local has_active = false
+  for i = 1, 12 do
+    local channel = "d" .. i
+    if state.active_channels[channel] and state.channels[channel] then
+      has_active = true
+      local pattern = state.channels[channel]
+      
+      -- Channel header
+      table.insert(lines, string.format("═══ %s ═══", channel))
+      
+      -- Show sounds for this channel
+      local sound_line = "  "
+      for idx, sound in ipairs(pattern.sounds) do
+        -- Simple beat pattern based on sound position
+        local is_active = ((beat - 1 + idx - 1) % 8) < 2
+        if is_active then
+          sound_line = sound_line .. "[" .. sound .. "] "
+        else
+          sound_line = sound_line .. " " .. sound .. "  "
         end
       end
-      table.insert(lines, " " .. display .. " " .. (drum.type == "default" and "melody" or drum.type))
+      table.insert(lines, sound_line)
+      
+      -- Visual representation
+      local viz_line = "  "
+      for b = 1, 8 do
+        if b == beat then
+          viz_line = viz_line .. "█ "
+        else
+          viz_line = viz_line .. "░ "
+        end
+      end
+      table.insert(lines, viz_line)
+      table.insert(lines, "")
     end
-    table.insert(lines, "")
   end
   
+  -- Show all channels status
+  table.insert(lines, "─── Channels ───")
+  local channel_status = " "
+  for i = 1, 12 do
+    local ch = "d" .. i
+    if state.active_channels[ch] then
+      channel_status = channel_status .. string.format("[%s] ", ch)
+    else
+      channel_status = channel_status .. string.format(" %s  ", ch)
+    end
+    if i == 6 then
+      table.insert(lines, channel_status)
+      channel_status = " "
+    end
+  end
+  table.insert(lines, channel_status)
+  
   -- If no patterns, show waiting message
-  if #state.patterns == 0 then
+  if not has_active then
     table.insert(lines, "")
-    table.insert(lines, "  Waiting for patterns...")
+    table.insert(lines, "  No active patterns...")
     table.insert(lines, "  Evaluate some code with <C-e>")
   end
   
@@ -189,8 +225,69 @@ end
 -- Integration with REPL evaluation
 function M.on_eval(code)
   if state.win_id and api.nvim_win_is_valid(state.win_id) then
-    M.update_pattern(code)
+    -- Extract channel number (d1, d2, etc.)
+    local channel = code:match("^%s*(d%d+)")
+    if channel then
+      -- Update specific channel
+      M.update_channel(channel, code)
+    else
+      -- Legacy single pattern update
+      M.update_pattern(code)
+    end
   end
+end
+
+-- Update a specific channel with pattern
+function M.update_channel(channel, code)
+  if not channel or not code then
+    return
+  end
+  
+  -- Parse the pattern for this channel
+  local pattern_info = M.parse_pattern(code)
+  if pattern_info then
+    state.channels[channel] = pattern_info
+    state.active_channels[channel] = true
+  elseif code:match("silence") then
+    -- Handle silence command
+    state.active_channels[channel] = false
+  end
+end
+
+-- Parse pattern string and return pattern info
+function M.parse_pattern(pattern_string)
+  local sounds = {}
+  
+  -- Extract sound patterns
+  local sound_pattern = pattern_string:match('sound%s*"([^"]+)"') or 
+                       pattern_string:match('s%s*"([^"]+)"')
+  
+  if sound_pattern then
+    -- Split by spaces to get individual sounds
+    for sound in sound_pattern:gmatch("%S+") do
+      local base_sound = sound:match("^([^:*]+)")
+      if base_sound then
+        table.insert(sounds, base_sound)
+      end
+    end
+  end
+  
+  -- Return pattern info if we found sounds
+  if #sounds > 0 then
+    return {
+      sounds = sounds,
+      code = pattern_string,
+      timestamp = vim.loop.now(),
+    }
+  end
+  
+  return nil
+end
+
+-- Clear all channels (for hush)
+function M.clear_all()
+  state.channels = {}
+  state.active_channels = {}
 end
 
 return M
