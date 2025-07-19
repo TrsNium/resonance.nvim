@@ -122,6 +122,8 @@ function M.eval_line()
   
   if M.send(line) then
     require("resonance.ui").flash_line()
+    -- Update visualizer
+    require("resonance.visualizer").on_eval(line)
   end
 end
 
@@ -132,6 +134,8 @@ function M.eval_block()
   
   if M.send(text) then
     require("resonance.ui").flash_region(start_line, end_line)
+    -- Update visualizer
+    require("resonance.visualizer").on_eval(text)
   end
 end
 
@@ -150,6 +154,8 @@ function M.eval_selection()
   local text = table.concat(lines, "\n")
   if M.send(text) then
     require("resonance.ui").flash_region(start_pos[2], end_pos[2])
+    -- Update visualizer
+    require("resonance.visualizer").on_eval(text)
   end
 end
 

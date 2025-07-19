@@ -55,6 +55,21 @@ function M.setup()
       vim.notify("TidalCycles REPL is not running", vim.log.levels.WARN)
     end
   end, { desc = "Show REPL status" })
+  
+  -- Visualizer commands
+  local visualizer = require("resonance.visualizer")
+  
+  vim.api.nvim_create_user_command("TidalViz", function()
+    visualizer.toggle()
+  end, { desc = "Toggle pattern visualizer" })
+  
+  vim.api.nvim_create_user_command("TidalVizOpen", function()
+    visualizer.open()
+  end, { desc = "Open pattern visualizer" })
+  
+  vim.api.nvim_create_user_command("TidalVizClose", function()
+    visualizer.close()
+  end, { desc = "Close pattern visualizer" })
 end
 
 return M
