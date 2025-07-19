@@ -86,6 +86,114 @@ require("resonance").setup({
 })
 ```
 
+## Architecture
+
+```mermaid
+graph TB
+    subgraph "Neovim"
+        A[resonance.nvim Plugin]
+        B[Lua API]
+        C[Terminal Buffer]
+        D[Keymaps/Commands]
+    end
+    
+    subgraph "TidalCycles"
+        E[GHCi REPL]
+        F[Tidal Library]
+        G[OSC Messages]
+    end
+    
+    subgraph "SuperCollider"
+        H[SuperDirt]
+        I[Audio Engine]
+        J[Sound Samples]
+    end
+    
+    subgraph "User Interface"
+        K[.tidal files]
+        L[Live Coding]
+    end
+    
+    K --> D
+    D --> B
+    B --> A
+    A --> C
+    C --> E
+    E --> F
+    F --> G
+    G --> H
+    H --> I
+    I --> J
+    J --> M[Audio Output]
+    
+    style A fill:#f9f,stroke:#333,stroke-width:4px
+    style F fill:#9ff,stroke:#333,stroke-width:2px
+    style H fill:#ff9,stroke:#333,stroke-width:2px
+```
+
+### Component Overview
+
+```mermaid
+graph LR
+    subgraph "resonance.nvim Structure"
+        Init[init.lua<br/>Main entry point]
+        Repl[repl.lua<br/>REPL management]
+        Commands[commands.lua<br/>Vim commands]
+        Keymaps[keymaps.lua<br/>Key bindings]
+        Utils[utils.lua<br/>Helper functions]
+        UI[ui.lua<br/>Visual feedback]
+        Boot[boot.lua<br/>Tidal boot script]
+    end
+    
+    Init --> Repl
+    Init --> Commands
+    Init --> Keymaps
+    Commands --> Repl
+    Keymaps --> Repl
+    Repl --> Utils
+    Repl --> UI
+    Init --> Boot
+```
+
+### Data Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Neovim
+    participant resonance.nvim
+    participant GHCi
+    participant SuperDirt
+    participant Audio
+    
+    User->>Neovim: :TidalStart
+    Neovim->>resonance.nvim: setup()
+    resonance.nvim->>resonance.nvim: detect GHCi command
+    resonance.nvim->>GHCi: start REPL process
+    GHCi->>GHCi: load BootTidal.hs
+    GHCi->>SuperDirt: connect (port 57120)
+    
+    User->>Neovim: <C-e> (evaluate)
+    Neovim->>resonance.nvim: eval_line()
+    resonance.nvim->>GHCi: send pattern
+    GHCi->>SuperDirt: OSC messages
+    SuperDirt->>Audio: generate sound
+    
+    resonance.nvim->>Neovim: flash visual feedback
+```
+
+### Module Responsibilities
+
+| Module | Responsibility |
+|--------|---------------|
+| `init.lua` | Plugin initialization, configuration management |
+| `repl.lua` | Terminal buffer creation, process management |
+| `commands.lua` | Vim command definitions (`:TidalStart`, etc.) |
+| `keymaps.lua` | Key binding setup for .tidal files |
+| `utils.lua` | GHCi detection, command building |
+| `ui.lua` | Visual feedback, error messages |
+| `boot.lua` | TidalCycles boot script generation |
+
 ## License
 
 MIT
