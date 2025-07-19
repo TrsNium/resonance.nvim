@@ -5,13 +5,26 @@ function M.command_exists(cmd)
   return vim.fn.executable(cmd) == 1
 end
 
+-- Check if we're in a stack project
+function M.is_stack_project()
+  return vim.fn.filereadable("stack.yaml") == 1 or 
+         vim.fn.filereadable("../stack.yaml") == 1 or
+         vim.fn.filereadable("../../stack.yaml") == 1
+end
+
 -- Find the appropriate GHCi command
 function M.find_ghci_command()
-  -- Priority order: user config > stack ghci > ghci
-  local commands = {
-    { cmd = "stack", args = { "exec", "--", "ghci" }, name = "stack ghci" },
-    { cmd = "ghci", args = {}, name = "ghci" },
-  }
+  -- Priority order: user config > stack project > stack global > ghci
+  local commands = {}
+  
+  -- If in a stack project, prefer stack exec
+  if M.is_stack_project() then
+    table.insert(commands, { cmd = "stack", args = { "exec", "--", "ghci" }, name = "stack ghci (project)" })
+  end
+  
+  -- Global options
+  table.insert(commands, { cmd = "stack", args = { "exec", "--resolver", "lts", "--", "ghci", "--package", "tidal" }, name = "stack ghci (global)" })
+  table.insert(commands, { cmd = "ghci", args = {}, name = "ghci" })
   
   for _, config in ipairs(commands) do
     if M.command_exists(config.cmd) then
