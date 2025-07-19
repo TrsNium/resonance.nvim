@@ -21,8 +21,8 @@ function M.start()
   
   -- Create buffer for REPL
   state.buf_id = api.nvim_create_buf(false, true)
-  api.nvim_buf_set_option(state.buf_id, "buftype", "terminal")
-  api.nvim_buf_set_option(state.buf_id, "buflisted", false)
+  vim.bo[state.buf_id].buftype = "terminal"
+  vim.bo[state.buf_id].buflisted = false
   
   -- Open window
   if state.config.window.floating then
